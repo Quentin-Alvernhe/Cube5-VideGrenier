@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Inscription{% endblock %}
+
+{% block body %}
+<div class="container-fluid login-page">
+    <div class="row" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="col-xs-12 col-md-6 form-wrap">
+            {# Affiche une erreur si existante #}
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            <div class="panel panel-default login-panel" style="margin-top: 20px;">
+                <div class="panel-heading text-center">
+                    Créer un compte
+                </div>
+                <div class="panel-body">
+                    <form action="/register" method="post">
+
+                        {# Champ pour nom d'utilisateur #}
+                        <div class="form-group">
+                            <label for="username">Nom d'utilisateur</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="username"
+                                   name="username"
+                                   placeholder="John Doe"
+                                   required>
+                        </div>
+
+                        {# Champ email #}
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email"
+                                   class="form-control"
+                                   id="email"
+                                   name="email"
+                                   placeholder="exemple@gmail.com"
+                                   required>
+                        </div>
+
+                        {# Mot de passe + visibilité #}
+                        <div class="form-group position-relative">
+                            <label for="password">Mot de passe</label>
+                            <div class="input-group" style="display:flex; flex-direction: row;">
+                                <input type="password"
+                                       class="form-control"
+                                       id="password"
+                                       name="password"
+                                       placeholder="**********"
+                                       required>
+                                <span class="input-group-text" onclick="togglePasswordVisibility('password', this)" style="cursor:pointer; margin: 3px; align-content: center;">
+                                    <i class="fa fa-eye-slash"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        {# Confirmation mot de passe #}
+                        <div class="form-group position-relative">
+                            <label for="password-confirm">Confirmez le mot de passe</label>
+                            <div class="input-group" style="display:flex; flex-direction: row;">
+                                <input type="password"
+                                       class="form-control"
+                                       id="password-confirm"
+                                       name="password_confirmation"
+                                       placeholder="**********"
+                                       required>
+                                <span class="input-group-text" onclick="togglePasswordVisibility('password-confirm', this)" style="cursor:pointer; margin: 3px; align-content: center;">
+                                    <i class="fa fa-eye-slash"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        {# Règles dynamiques de mot de passe #}
+                        <div id="password-rules" class="small">
+                            <p id="length" class="text-danger">• Minimum 8 caractères</p>
+                            <p id="upper" class="text-danger">• Une lettre majuscule</p>
+                            <p id="lower" class="text-danger">• Une lettre minuscule</p>
+                            <p id="number" class="text-danger">• Un chiffre</p>
+                            <p id="special" class="text-danger">• Un caractère spécial</p>
+                        </div>
+                        <button type="submit" name="submit" class="btn btn-cv1 btn-block">Valider</button>
+
+                        <div class="text-center ortext">ou</div>
+                        <div class="text-center signuptext">
+                            <a href="/login">Connexion</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    //vérifier dynamiquement les règles du mot de passe
+    const password = document.getElementById('password');
+    const rules = {
+        length: document.getElementById('length'),
+        upper: document.getElementById('upper'),
+        lower: document.getElementById('lower'),
+        number: document.getElementById('number'),
+        special: document.getElementById('special')
+    };
+
+    password.addEventListener('input', function () {
+        const val = password.value;
+        rules.length.className = val.length >= 8 ? 'text-success' : 'text-danger';
+        rules.upper.className = /[A-Z]/.test(val) ? 'text-success' : 'text-danger';
+        rules.lower.className = /[a-z]/.test(val) ? 'text-success' : 'text-danger';
+        rules.number.className = /\d/.test(val) ? 'text-success' : 'text-danger';
+        rules.special.className = /[\W_]/.test(val) ? 'text-success' : 'text-danger';
+    });
+
+    function togglePasswordVisibility(fieldId, eyeIcon) {
+        const input = document.getElementById(fieldId);
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        eyeIcon.innerHTML = isPassword
+            ? `<i class="fa fa-eye"></i>`
+            : `<i class="fa fa-eye-slash"></i>`;
+    }
+
+</script>
+{% endblock %}

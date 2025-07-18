@@ -1,0 +1,37 @@
+{% set extra_css = '/style/forgot-password.css' %}
+{% extends "base.html" %}
+{% block title %}Code reçu{% endblock %}
+{% block body %}
+    <div class="centered-form-wrapper">
+        <div class="centered-form">
+            {# Formulaire de saisie du code de vérification #}
+            <form method="post">
+                <label>Code</label>
+                <input type="text" name="code" required>
+                <p>Le code expire dans 5 minutes.</p>
+                <button type="submit">Valider</button>
+                {% if error %}<p style="color:red">{{ error }}</p>{% endif %}
+            </form>
+
+            {# Message de succès après validation du code #}
+            {% if success %}
+            <div class="alert-success" id="success-message">
+                {{ success }}
+            </div>
+            {% endif %}
+
+            {# Lien pour renvoyer un code #}
+            <p><a href="/resend-code" class="resend-link">Renvoyer un code</a></p>
+        </div>
+    </div>
+
+<script>
+    // Masquer automatiquement le message de succès après 10 secondes
+    const message = document.getElementById('success-message');
+    if (message) {
+        setTimeout(() => {
+            message.style.display = 'none';
+        }, 10000); // 10 secondes
+    }
+</script>
+{% endblock %}

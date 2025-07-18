@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Produit{% endblock %}
+
+{% block body %}
+
+<div class="content-wrapper single-article mt-40">
+    <div class="container">
+        <div class="row">
+            {# Colonne principale : contenu de l’article #}
+            <div class="col-lg-8 col-xs-12 col-sm-12">
+                <div class="preview-article">
+                    {# Affichage de l'image du produit #}
+                    <img
+                            src="{{ ('/storage/' ~ article.picture) }}"/>
+
+                </div>
+                <h1><a href="#">{{article.name}}</a></h1>
+
+                {# Informations sur l’auteur #}
+                <div class="author">
+                    <div class="author-head">
+                        <div class="sv-name">
+                            <div><a href="#">{{ article.username }}</a></div>
+                        </div>
+                    </div>
+
+                    <div class="author-border"></div>
+                    {# Nombre de vues de l’article #}
+                    <div class="sv-views">
+                        <div class="sv-views-count">
+                            {{ article.views }} vues
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+
+                {# Description complète de l’article #}
+                <div class="info">
+                    <div class="info-content">
+                        <h4>Description:</h4>
+                        <p>{{article.description}}</p>
+                    </div>
+                    {# Section bouton contact + suppression éventuelle #}
+                    <div class="u-area mt-small contact-suppr">
+
+                        {# Bouton pour afficher le formulaire de contact #}
+                        <button id="contact-btn" class="btn btn-primary u-btn" type="button">
+                            Contacter {{ article.username }}
+                        </button>
+
+                        {# Si l'utilisateur est le propriétaire, bouton de suppression de l’article #}
+                        {% if isOwner %}
+                        <form method="post" action="/product/delete/{{ article.id }}"
+                              onsubmit="return confirm('Voulez-vous vraiment supprimer cette annonce ?');"
+                              style="margin-top: 1rem;">
+                            <button type="submit" class="btn btn-danger">
+                                Supprimer cette annonce
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    {# Formulaire de contact masqué par défaut #}
+                    <div id="contact-section" style="display:none;">
+                        <h4>Envoyer un message à {{ article.username }}</h4>
+                        <form id="contact-form" action="/product/{{article.id}}">
+                            <div class="form-group">
+                                <label for="subject">Titre du message</label>
+                                <input type="text" id="subject" name="subject" class="form-control" required>
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="fromEmail">Votre email</label>
+                                <input type="email" id="fromEmail" name="fromEmail" class="form-control" required>
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="message">Message</label>
+                                <textarea id="message" name="message" rows="4" class="form-control" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-3">Envoyer</button>
+                        </form>
+                        <div id="contact-feedback" class="mt-3"></div>
+                    </div>
+                    <script>
+                        // On récupère les DOM nodes
+                        const form     = document.getElementById('contact-form');
+                        const feedback = document.getElementById('contact-feedback');
+                        const toggle   = document.getElementById('contact-btn');
+                        const section  = document.getElementById('contact-section');
+
+                        // On gère l'ouverture/fermeture du formulaire
+                        toggle.addEventListener('click', () => {
+                            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+                        });
+
+                        // On intercepte la soumission
+                        form.addEventListener('submit', e => {
+                            e.preventDefault();
+                            feedback.textContent = 'Envoi en cours…';
+
+                            fetch(form.action, {
+                                method: 'POST',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json'
+                                },
+                                body: new FormData(form)
+                            })
+                                .then(res =>
+                                    // pour debug, on récupère tout en texte
+                                    res.text().then(text => ({ status: res.status, text }))
+                                )
+                                .then(({ status, text }) => {
+                                    console.log("📬 RAW RESPONSE:", JSON.stringify(text));
+                                    let body;
+                                    try {
+                                        body = JSON.parse(text);
+                                    } catch(err) {
+                                        console.error("JSON parse error, raw=", text);
+                                        feedback.innerHTML = '<div class="alert alert-danger">Réponse invalide du serveur.</div>';
+                                        return;
+                                    }
+                                    // Si tout s’est bien passé
+                                    if (status === 200 && body.status === 'ok') {
+                                        feedback.innerHTML = `<div class="alert alert-success">${body.message}</div>`;
+                                        form.reset();
+                                    } else {
+                                        feedback.innerHTML = `<div class="alert alert-danger">${body.message}</div>`;
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error("fetch error", err);
+                                    feedback.innerHTML = '<div class="alert alert-danger">Erreur réseau.</div>';
+                                });
+                        });
+                    </script>
+                </div>
+            </div>
+
+            {# Colonne latérale : suggestions de produits similaires #}
+            <div class="col-lg-4 col-xs-12 col-sm-12 hidden-xs">
+                <p>Vous aimerez peut-être...</p>
+                <div class="list">
+                    <div class="h-article row">
+                        {% for suggestion in suggestions %}
+                        <div class="col-lg-12 col-sm-12">
+                            <div class="v-desc">
+                                <a href="{{ ('/product/' ~ suggestion.id) }}">{{suggestion.name}}</a>
+                            </div>
+
+                            <div class="v-views">
+                                {{ suggestion.views}} vues
+                            </div>
+
+                            <hr>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}

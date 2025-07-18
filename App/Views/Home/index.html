@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block body %}
+<div class="content-wrapper">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+
+                <div class="content-block head-div">
+                    <div class="cb-header">
+                        <div class="row">
+                            <div class="col-lg-10 col-sm-10 col-xs-8">
+                                <ul class="list-inline">
+                                    <li>
+                                        <a href="#" class="color-active">
+                                            <span class="visible-xs">À la une</span>
+                                            <span class="hidden-xs">À la une</span>
+                                        </a>
+                                    </li>
+                                    <li><a href="#">Autour de moi</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-2 col-sm-2 col-xs-4">
+                                <div class="btn-group pull-right bg-clean">
+                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        Filtrer par <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a onclick="getProductsAndRender('views')"><i
+                                                class="cv cvicon-cv-calender"></i>
+                                            Popularité</a></li>
+                                        <li><a onclick="getProductsAndRender('published_date')"><i
+                                                class="cv cvicon-cv-calender"></i>
+                                            Récent</a></li>
+                                    </ul>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cb-content">
+                        <div class="row" id="articlelist">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

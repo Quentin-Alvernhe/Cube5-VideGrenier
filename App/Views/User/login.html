@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Connexion{% endblock %}
+
+{% block body %}
+<div class="container-fluid login-page">
+    <div class="row" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <!--  FORMULAIRE -->
+        <div class="col-xs-12 col-md-6 form-wrap" style="margin-top: 20px;">
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            <div class="panel panel-default login-panel">
+                <div class="panel-heading text-center">
+                    Connexion
+                </div>
+                <div class="panel-body">
+                    <form action="" method="post">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email"
+                                   class="form-control"
+                                   id="email"
+                                   name="email"
+                                   placeholder="exemple@gmail.com"
+                                   required>
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction: column;">
+                            <label for="password">Mot de passe</label>
+                            <div style="display:flex; flex-direction: row;">
+                                <input type="password"
+                                       class="form-control"
+                                       id="password"
+                                       name="password"
+                                       placeholder="**********"
+                                       required>
+                                <span class="input-group-text" onclick="togglePasswordVisibility('password', this)" style="cursor:pointer; margin: 3px; align-content: center;">
+                                    <i class="fa fa-eye-slash"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="remember"> Se souvenir de moi
+                                <span class="text2">(non recommandé sur PC partagé)</span>
+                            </label>
+                        </div>
+                        <div style="display: flex;flex-direction: column; align-items: center; justify-content: center;">
+                            <div class="col-lg-7">
+                                <button type="submit" name="submit" class="btn btn-cv1">Connexion</button>
+                            </div>
+
+                            <div class="text-center ortext">ou</div>
+                            <div class="text-center signuptext">
+                                <a href="/register">Inscription</a>
+                            </div>
+                            <div class="text-center forgottext">
+                                <a href="/forgot">Mot de passe oublié ?</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function togglePasswordVisibility(fieldId, eyeIcon) {
+        const input = document.getElementById(fieldId);
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        eyeIcon.innerHTML = isPassword
+            ? `<i class="fa fa-eye"></i>`
+            : `<i class="fa fa-eye-slash"></i>`;
+    }
+</script>
+{% endblock %}

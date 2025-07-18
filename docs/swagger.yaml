@@ -1,0 +1,495 @@
+openapi: 3.0.0
+info:
+  title: VideGrenier API
+  description: API de gestion des annonces de vide-grenier
+  version: 1.0.0
+  contact:
+    name: Support VideoGrenier
+    email: contact@videgrenier.com
+
+servers:
+  - url: http://localhost:8080
+    description: Environnement de développement
+  - url: http://localhost:8081
+    description: Environnement de preprod
+
+paths:
+  # ===== AUTHENTIFICATION =====
+  /login:
+    get:
+      summary: Afficher la page de connexion
+      tags:
+        - Authentification
+      responses:
+        '200':
+          description: Page de connexion
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Se connecter
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "motdepasse123"
+                remember:
+                  type: string
+                  enum: ["on"]
+                  description: "Case 'Se souvenir de moi'"
+              required:
+                - email
+                - password
+      responses:
+        '302':
+          description: Redirection vers /account si succès, ou retour au login si échec
+        '400':
+          description: Données invalides
+
+  /register:
+    get:
+      summary: Afficher la page d'inscription
+      tags:
+        - Authentification
+      responses:
+        '200':
+          description: Page d'inscription
+    post:
+      summary: Créer un compte
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "johndoe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  example: "motdepasse123"
+                password_confirmation:
+                  type: string
+                  example: "motdepasse123"
+              required:
+                - username
+                - email
+                - password
+                - password_confirmation
+      responses:
+        '302':
+          description: Redirection vers /account si succès
+        '400':
+          description: Erreur de validation
+
+  /logout:
+    post:
+      summary: Se déconnecter
+      tags:
+        - Authentification
+      security:
+        - sessionAuth: []
+      responses:
+        '302':
+          description: Redirection vers la page d'accueil
+
+  # ===== GESTION DE COMPTE =====
+  /account:
+    get:
+      summary: Page de compte utilisateur
+      tags:
+        - Compte
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Page de compte avec liste des annonces de l'utilisateur
+        '302':
+          description: Redirection vers /login si non connecté
+
+  # ===== GESTION DES PRODUITS/ANNONCES =====
+  /product:
+    get:
+      summary: Afficher le formulaire d'ajout d'annonce
+      tags:
+        - Annonces
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Formulaire d'ajout d'annonce
+    post:
+      summary: Créer une nouvelle annonce
+      tags:
+        - Annonces
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Vélo d'appartement"
+                description:
+                  type: string
+                  example: "Vélo en excellent état, peu utilisé"
+                picture:
+                  type: string
+                  format: binary
+                  description: "Image de l'annonce (JPEG, JPG, PNG, max 4MB)"
+              required:
+                - name
+                - description
+                - picture
+      responses:
+        '302':
+          description: Redirection vers la page de l'annonce créée
+        '400':
+          description: Erreur de validation ou d'upload
+
+  /product/{id}:
+    get:
+      summary: Afficher une annonce
+      tags:
+        - Annonces
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Page de détail de l'annonce
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: Annonce non trouvée
+    post:
+      summary: Envoyer un message au vendeur
+      tags:
+        - Annonces
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  example: "Intérêt pour votre annonce"
+                fromEmail:
+                  type: string
+                  format: email
+                  example: "acheteur@example.com"
+                message:
+                  type: string
+                  example: "Bonjour, je suis intéressé par votre annonce..."
+              required:
+                - subject
+                - fromEmail
+                - message
+      responses:
+        '200':
+          description: Message envoyé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  message:
+                    type: string
+                    example: "Message envoyé avec succès"
+        '422':
+          description: Données manquantes
+        '500':
+          description: Erreur d'envoi d'email
+
+  /product/delete/{id}:
+    post:
+      summary: Supprimer une annonce
+      tags:
+        - Annonces
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '302':
+          description: Redirection vers /account après suppression
+        '403':
+          description: Non autorisé (pas le propriétaire)
+        '404':
+          description: Annonce non trouvée
+
+  # ===== API ENDPOINTS =====
+  /api/search:
+    get:
+      summary: Rechercher des annonces
+      tags:
+        - API
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "vélo"
+          description: "Terme de recherche"
+      responses:
+        '200':
+          description: Résultats de recherche
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    name:
+                      type: string
+                      example: "Vélo d'appartement"
+                    description:
+                      type: string
+                      example: "Vélo en excellent état"
+                    picture:
+                      type: string
+                      example: "1.jpg"
+                    views:
+                      type: integer
+                      example: 15
+
+  /api/products:
+    get:
+      summary: Récupérer toutes les annonces
+      tags:
+        - API
+      parameters:
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: ["views", "data", ""]
+          description: "Tri par vues, date ou sans tri"
+      responses:
+        '200':
+          description: Liste des annonces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+
+  /api/cities:
+    get:
+      summary: Rechercher des villes
+      tags:
+        - API
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "Paris"
+      responses:
+        '200':
+          description: Liste des IDs de villes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # ===== RESET PASSWORD =====
+  /forgot:
+    get:
+      summary: Demande de réinitialisation de mot de passe
+      tags:
+        - Mot de passe
+      responses:
+        '200':
+          description: Formulaire de demande
+    post:
+      summary: Envoyer un code de réinitialisation
+      tags:
+        - Mot de passe
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+                - email
+      responses:
+        '302':
+          description: Redirection vers /reset-code
+        '400':
+          description: Email non trouvé
+
+  /reset-code:
+    get:
+      summary: Vérification du code de réinitialisation
+      tags:
+        - Mot de passe
+      responses:
+        '200':
+          description: Formulaire de saisie du code
+    post:
+      summary: Valider le code de réinitialisation
+      tags:
+        - Mot de passe
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: "123456"
+              required:
+                - code
+      responses:
+        '302':
+          description: Redirection vers /reset-password si valide
+
+  /reset-password:
+    get:
+      summary: Formulaire de nouveau mot de passe
+      tags:
+        - Mot de passe
+      responses:
+        '200':
+          description: Formulaire de changement
+    post:
+      summary: Changer le mot de passe
+      tags:
+        - Mot de passe
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                confirm:
+                  type: string
+              required:
+                - password
+                - confirm
+      responses:
+        '302':
+          description: Redirection vers /login
+
+components:
+  schemas:
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Vélo d'appartement"
+        description:
+          type: string
+          example: "Vélo en excellent état, peu utilisé"
+        picture:
+          type: string
+          example: "1.jpg"
+        user_id:
+          type: integer
+          example: 5
+        published_date:
+          type: string
+          format: date
+          example: "2024-01-15"
+        views:
+          type: integer
+          example: 23
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: PHPSESSID
+      description: "Authentification par session PHP"
+
+security:
+  - sessionAuth: []

@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  db_prod:
+    image: mysql:8.0
+    container_name: db_prod
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: videgrenierenligne
+      MYSQL_USER: webapplication
+      MYSQL_PASSWORD: 653rag9T
+    ports:
+      - "3308:3306"
+    volumes:
+      - db_data_prod:/var/lib/mysql
+      - ./sql/import.sql:/docker-entrypoint-initdb.d/import.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 80s
+      
+  web_prod:
+    image: videgrenier:latest
+    container_name: web_prod
+    restart: unless-stopped
+    depends_on:
+      db_prod:
+        condition: service_healthy
+    ports:
+      - "8082:80"
+    environment:
+      - DB_HOST=db_prod
+      - DB_USER=webapplication
+      - DB_PASSWORD=653rag9T
+      - DB_NAME=videgrenierenligne
+      - ENVIRONMENT=production
+    volumes:
+      - storage_prod:/var/www/html/public/storage
+      
+volumes:
+  db_data_prod:
+  storage_prod:

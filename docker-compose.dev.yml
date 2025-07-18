@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db_dev:
+    image: mysql:8.0
+    container_name: db_dev
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: videgrenierenligne
+      MYSQL_USER: webapplication
+      MYSQL_PASSWORD: 653rag9T
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data_dev:/var/lib/mysql
+      - ./sql/import.sql:/docker-entrypoint-initdb.d/init.sql
+
+  web_dev:
+    build: .
+    container_name: web_dev
+    depends_on:
+      - db_dev
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - storage_dev:/var/www/html/public/storage
+    environment:
+      - DB_HOST=db_dev
+      - DB_USER=webapplication
+      - DB_PASSWORD=653rag9T
+      - DB_NAME=videgrenierenligne
+      - ENVIRONMENT=development
+      - SMTP_USERNAME=dorianroch292@gmail.com
+      - SMTP_PASSWORD=utab kedc oiqo tsro
+
+  swagger_dev:
+    image: swaggerapi/swagger-ui
+    container_name: swagger_dev
+    ports:
+      - "8090:8080"
+    environment:
+      SWAGGER_JSON: /api/swagger.yaml
+    volumes:
+      - ./docs/swagger.yaml:/api/swagger.yaml:ro
+    restart: unless-stopped
+
+volumes:
+  db_data_dev:
+  storage_dev:

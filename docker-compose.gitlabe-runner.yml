@@ -1,0 +1,10 @@
+services:
+  runner: 
+    image: gitlab/gitlab-runner:latest
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock
+      - gitlab-runner-config:/etc/gitlab-runner
+      - ./runner:/runner
+
+volumes: 
+  gitlab-runner-config:

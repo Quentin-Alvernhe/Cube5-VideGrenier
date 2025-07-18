@@ -1,0 +1,53 @@
+services:
+  db_preprod:
+    image: mysql:8.0
+    container_name: db_preprod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: videgrenierenligne
+      MYSQL_USER: webapplication
+      MYSQL_PASSWORD: 653rag9T
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data_preprod:/var/lib/mysql
+      - ./sql/import.sql:/docker-entrypoint-initdb.d/import.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 80s
+      
+  web_preprod:
+    image: videgrenier:preprod
+    container_name: web_preprod
+    depends_on:
+      db_preprod:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    environment:
+      - DB_HOST=db_preprod
+      - DB_USER=webapplication
+      - DB_PASSWORD=653rag9T
+      - DB_NAME=videgrenierenligne
+      - ENVIRONMENT=preproduction
+    volumes:
+      - storage_preprod:/var/www/html/public/storage  # Volume pour images preprod
+  
+  swagger_preprod:
+    image: swaggerapi/swagger-ui
+    container_name: swagger_preprod
+    ports:
+      - "8091:8080"
+    environment:
+      SWAGGER_JSON: /api/swagger.yaml
+    volumes:
+      - ./docs/swagger.yaml:/api/swagger.yaml:ro
+    restart: unless-stopped
+      
+volumes:
+  db_data_preprod:
+  storage_preprod:  # Volume séparé pour preprod
